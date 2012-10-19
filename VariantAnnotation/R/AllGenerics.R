@@ -81,6 +81,11 @@ setGeneric("MatrixToSnpMatrix", signature = c("callMatrix", "ref", "alt"),
     standardGeneric("MatrixToSnpMatrix")
 )
 
+setGeneric("genotypeToSnpMatrix", signature = "x",
+    function(x, ...)
+    standardGeneric("genotypeToSnpMatrix")
+)
+
 ### -------------------------------------------------------------------------
 ### scanVcf 
 ###
