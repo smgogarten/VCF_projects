@@ -8,7 +8,7 @@
 ## 2 = heterozygous (0|1 or 1|0) 
 ## 3 = homozygous alternate (risk) allele (1|1)
 
-setMethod("genotypeToSnpMatrix", "VCF",
+setMethod("genotypeToSnpMatrix", "CollapsedVCF",
           function(x, ...)
 {
     ok <- suppressWarnings(require("snpStats", quietly=TRUE, 

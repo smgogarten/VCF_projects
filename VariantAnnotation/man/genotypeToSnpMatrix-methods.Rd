@@ -13,12 +13,12 @@
 }
 
 \usage{
-\S4method{genotypeToSnpMatrix}{VCF}(x, ...)
+\S4method{genotypeToSnpMatrix}{CollapsedVCF}(x, ...)
 \S4method{genotypeToSnpMatrix}{matrix,DNAStringSet,DNAStringSetList}(x, ref, alt, ...)
 }
 
 \arguments{
-  \item{x}{A \code{VCF} object or a \code{matrix} of genotype data from the "GT" FORMAT field 
+  \item{x}{A \code{CollapsedVCF} object or a \code{matrix} of genotype data from the "GT" FORMAT field 
     of a VCF file.  This \code{matrix} is created with a call to \code{readVcf}
     and can be accessed with \code{geno<VCF>}.
   }
