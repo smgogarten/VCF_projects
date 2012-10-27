@@ -75,3 +75,24 @@ setMethod("genotypeToSnpMatrix", "matrix",
                   allele.2=alt,
                   ignore=flt)
 }
+
+probabilityToSnpMatrix <- function(probs) {
+    if (ncol(probs) != 3)
+        stop("input matrix should have 3 columns: P(RR), P(RA), P(AA)")
+    
+    # post2g can't handle missing data
+    missing <- rowSums(is.na(probs)) > 0
+    if (sum(missing) > 0)
+        probs[missing,] <- 0
+    
+    if (!isTRUE(all.equal(rowSums(probs[!missing,]), rep(1,sum(!missing)),
+                          tolerance=0.0001, check.attributes=FALSE,
+                          check.names=FALSE)))
+        stop("sum of probabilities in each row of input matrix should = 1")
+
+    g <- post2g(probs)
+    if (sum(missing) > 0)
+        g[missing] <- as.raw(0)
+    g <-  matrix(g, nrow=1, dimnames=list(NULL,rownames(probs)))
+    new("SnpMatrix", g)
+}

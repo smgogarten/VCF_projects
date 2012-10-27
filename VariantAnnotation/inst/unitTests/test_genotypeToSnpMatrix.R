@@ -64,7 +64,29 @@ test_gSM_matrix_GT_nonsnv <- function() {
 }
 
 test_gSM_VCF_structural <- function() {
-  fl <- system.file("extdata", "structural.vcf", package="VariantAnnotation")
-  vcf <- readVcf(fl, "hg19")
-  checkIdentical(NULL, genotypeToSnpMatrix(vcf))
+    fl <- system.file("extdata", "structural.vcf", package="VariantAnnotation")
+    vcf <- readVcf(fl, "hg19")
+    checkIdentical(NULL, genotypeToSnpMatrix(vcf))
+}
+
+test_pSM_valid <- function() {
+    probs <- matrix(c(1,0,0,
+                      0,1,0,
+                      0,0,1,
+                      NA,NA,NA),
+                    ncol=3, byrow=TRUE,
+                    dimnames=list(1:4,c("RR","RA","AA")))
+    sm <- new("SnpMatrix", matrix(as.raw(c(1,2,3,0)), nrow=1,
+                                  dimnames=list(NULL,1:4)))
+    checkIdentical(sm, probabilityToSnpMatrix(probs))                      
+}
+
+test_pSM_invalid <- function() {
+    # invalid matrix - probs do not sum to 1
+    probs <- matrix(c(1,1,0,
+                      0,1,0,
+                      0,0,1,
+                      NA,NA,NA),
+                    ncol=3, byrow=TRUE)
+    checkException(probabilityToSnpMatrix(probs))                      
 }
