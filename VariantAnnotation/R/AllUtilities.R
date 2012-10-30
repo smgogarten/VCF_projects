@@ -1,14 +1,16 @@
 ### =========================================================================
-### Helper functions used by more than one method 
-### Not exported 
+### Helper functions not exported 
 ### =========================================================================
 
 .collapseLists <- function(vcf, param)
 {
+    idx <- sapply(vcf, function(elt) length(elt$rowData) > 0L)
+    if (length(vcf) > 1L)
+        vcf <- vcf[idx]
     if (is(param, "ScanVcfParam"))
-        paramRangeID <- names(unlist(vcfWhich(param), use.names=FALSE))
+        paramRangeID <- names(unlist(vcfWhich(param), use.names=FALSE))[idx]
     else
-        paramRangeID <- names(param)
+        paramRangeID <- names(param)[idx]
     if (is.null(paramRangeID))
         paramRangeID <- rep(NA_character_, length(vcf))
 
@@ -61,7 +63,7 @@
                 } else {
                     trans <- lapply(elt, t)
                     cmb <- matrix(t(do.call(c, trans)), 
-                                  c(length(lst[["rowData"]]), d[2]))
+                                  length(lst[["rowData"]]), d[2])
                     cmb
                 }
             }) 
