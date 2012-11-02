@@ -20,8 +20,17 @@ setMethod("genotypeToSnpMatrix", "CollapsedVCF",
       warning("structural variants detected and not supported by SnpMatrix; returning NULL")
       return(NULL)
     }
-    gt <- geno(x)$GT
     ref <- ref(x)
+
+    # if !uncertain
+    gt <- geno(x)$GT
+
+    # if uncertain
+    # do we have GP or GL?
+    # if not, return NULL with warning
+
+    # if GL, convert to GP
+    
     callGeneric(gt, ref, alt)
 })
 

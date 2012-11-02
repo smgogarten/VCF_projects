@@ -1,7 +1,8 @@
 \name{genotypeToSnpMatrix}
 
 \alias{genotypeToSnpMatrix}
-\alias{genotypeToSnpMatrix,VCF-method}
+\alias{genotypeToSnpMatrix,CollapsedVCF-method}
+\alias{genotypeToSnpMatrix,matrix-method}
 \alias{genotypeToSnpMatrix,matrix,DNAStringSet,DNAStringSetList-method}
 
 
