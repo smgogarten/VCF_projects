@@ -17,8 +17,8 @@ setMethod("genotypeToSnpMatrix", "CollapsedVCF",
 
     alt <- alt(x)
     if (is(alt, "CompressedCharacterList")) {
-      warning("structural variants detected and not supported by SnpMatrix; returning NULL")
-      return(NULL)
+        warning("structural variants detected and not supported by SnpMatrix; returning NULL")
+        return(NULL)
     }
     ref <- ref(x)
 
@@ -26,17 +26,27 @@ setMethod("genotypeToSnpMatrix", "CollapsedVCF",
     gt <- geno(x)$GT
 
     # if uncertain
-    # do we have GP or GL?
-    # if not, return NULL with warning
+        # do we have GP or GL?
+        # if not, return NULL with warning
 
-    # if GL, convert to GP
+        # if GL, convert to GP
     
+        # it's possible to have a single GL field for ref hom calls
+        #np <- elementLengths(gp)
+        #gp[np == 1] <- list(1,0,0)
+
     callGeneric(gt, ref, alt)
 })
 
 setMethod("genotypeToSnpMatrix", "matrix",
           function(x, ref, alt, ...)
 {
+    # if mode of matrix is character, we have GT with a single value for each snp
+
+    # if mode of matrix is list, we have GP with multiple values for each snp
+    # for each sample, call probabilityToSnpMatrix
+    # use cbind2 to combine
+  
     map <- setNames(sapply(rep(c(0, 1, 2, 2, 3), 2), as.raw),
                     c(".|.", "0|0", "0|1", "1|0", "1|1",
                       "./.", "0/0", "0/1", "1/0", "1/1"))
@@ -106,4 +116,13 @@ probabilityToSnpMatrix <- function(probs) {
     }
     g <-  matrix(g, nrow=1, dimnames=list(NULL,rownames(probs)))
     new("SnpMatrix", g)
+}
+
+GLtoGP <- function(gl) {
+    gp <- gl
+    # there is probably a faster way to do this
+    for (i in 1:length(gl)) {
+        gp[[i]] <- 10^gl[[i]] / sum(10^gl[[i]])
+    }
+    gp
 }
