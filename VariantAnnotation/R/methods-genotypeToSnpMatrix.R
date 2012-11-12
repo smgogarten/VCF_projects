@@ -27,16 +27,13 @@ setMethod("genotypeToSnpMatrix", "CollapsedVCF",
     } else {
         geno.cols <- row.names(geno(exptData(x)[["header"]]))
         if ("GP" %in% geno.cols) {
-            gt <- geno(x)$GP
+            gt <- .matrixOfListsToArray(geno(x)$GP)
         } else if ("GL" %in% geno.cols) {
-            gt <- GLtoGP(geno(x)$GL)
+            gt <- GLtoGP(.matrixOfListsToArray(geno(x)$GL))
         } else {
             warning("uncertain=TRUE requires GP or GL; returning NULL")
             return(NULL)
         }
-        # it's possible to have a single GL field for ref hom calls
-        np <- elementLengths(gp)
-        gt[np == 1] <- list(1,0,0)
     }
 
     callGeneric(gt, ref, alt)
@@ -123,12 +120,7 @@ probabilityToSnpMatrix <- function(probs) {
 }
 
 GLtoGP <- function(gl) {
-    gp <- gl
-    # there is probably a faster way to do this
-    for (i in 1:length(gl)) {
-        gp[[i]] <- 10^gl[[i]] / sum(10^gl[[i]])
-    }
-    gp
+    aperm(apply(gl, c(1,2), function(x){10^x / sum(10^x, na.rm=TRUE)}), c(2,3,1))
 }
 
 .matrixOfListsToArray <- function(x) {

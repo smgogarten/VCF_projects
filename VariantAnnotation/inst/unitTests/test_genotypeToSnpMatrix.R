@@ -92,15 +92,20 @@ test_pSM_invalid <- function() {
 }
 
 test_gl2gp <- function() {
-    probs <- matrix(c(list(c(0.4,0.3,0.3)),
-                      list(c(0.5,0.1,0.4)),
-                      list(c(0.9,0.05,0.05)),
-                      list(c(0,1,0)),
-                      list(c(0,0,1)),
-                      list(c(1))),
-                    ncol=2)
+    probs <- aperm(array(c(0.4,0.3,0.3,
+                           0.5,0.1,0.4,
+                           0.9,0.05,0.05,
+                           0,1,0,
+                           0,0,1,
+                           1,NA,NA),
+                         dim=c(3,3,2)),
+                   c(2,3,1))
     gl <- probs
-    for (i in 1:length(probs)) gl[[i]] <- log10(probs[[i]])
+    for (i in 1:nrow(probs)) {
+        for (j in 1:ncol(probs)) {
+            gl[i,j,] <- log10(probs[i,j,])
+        }
+    }
     gp <- GLtoGP(gl)
     checkEquals(probs, gp)
 }
