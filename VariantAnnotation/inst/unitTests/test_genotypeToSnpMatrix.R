@@ -92,15 +92,32 @@ test_pSM_invalid <- function() {
 }
 
 test_gl2gp <- function() {
-  probs <- matrix(c(list(c(0.4,0.3,0.3)),
-                    list(c(0.5,0.1,0.4)),
-                    list(c(0.9,0.05,0.05)),
-                    list(c(0,1,0)),
-                    list(c(0,0,1)),
-                    list(c(1))),
+    probs <- matrix(c(list(c(0.4,0.3,0.3)),
+                      list(c(0.5,0.1,0.4)),
+                      list(c(0.9,0.05,0.05)),
+                      list(c(0,1,0)),
+                      list(c(0,0,1)),
+                      list(c(1))),
                     ncol=2)
-  gl <- probs
-  for (i in 1:length(probs)) gl[[i]] <- log10(probs[[i]])
-  gp <- GLtoGP(gl)
-  checkEquals(probs, gp)
+    gl <- probs
+    for (i in 1:length(probs)) gl[[i]] <- log10(probs[[i]])
+    gp <- GLtoGP(gl)
+    checkEquals(probs, gp)
+}
+
+test_matrixToArray <- function() {
+    mat <- matrix(c(list(c(1,2,3)),
+                    list(c(4,5,6)),
+                    list(c(7,8,9)),
+                    list(c(10,11,12)),
+                    list(c(13,14)),
+                    list(c(15))),
+                  ncol=2)
+    arr <- .matrixOfListsToArray(mat)
+    for (i in 1:nrow(mat)) {
+        for (j in 1:ncol(mat)) {
+            n <- elementLengths(mat[i,j])
+            checkEquals(unlist(mat[i,j]), arr[i,j,1:n])
+        } 
+    }
 }
