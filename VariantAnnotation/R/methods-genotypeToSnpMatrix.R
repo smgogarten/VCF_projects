@@ -9,7 +9,7 @@
 ## 3 = homozygous alternate (risk) allele (1|1)
 
 setMethod("genotypeToSnpMatrix", "CollapsedVCF",
-          function(x, ...)
+          function(x, uncertain=FALSE, ...)
 {
     ok <- suppressWarnings(require("snpStats", quietly=TRUE, 
                                    character.only=TRUE))
@@ -22,18 +22,22 @@ setMethod("genotypeToSnpMatrix", "CollapsedVCF",
     }
     ref <- ref(x)
 
-    # if !uncertain
-    gt <- geno(x)$GT
-
-    # if uncertain
-        # do we have GP or GL?
-        # if not, return NULL with warning
-
-        # if GL, convert to GP
-    
+    if (!uncertain) {
+        gt <- geno(x)$GT
+    } else {
+        geno.cols <- row.names(geno(exptData(x)[["header"]]))
+        if ("GP" %in% geno.cols) {
+            gt <- geno(x)$GP
+        } else if ("GL" %in% geno.cols) {
+            gt <- GLtoGP(geno(x)$GL)
+        } else {
+            warning("uncertain=TRUE requires GP or GL; returning NULL")
+            return(NULL)
+        }
         # it's possible to have a single GL field for ref hom calls
-        #np <- elementLengths(gp)
-        #gp[np == 1] <- list(1,0,0)
+        np <- elementLengths(gp)
+        gt[np == 1] <- list(1,0,0)
+    }
 
     callGeneric(gt, ref, alt)
 })
@@ -125,4 +129,21 @@ GLtoGP <- function(gl) {
         gp[[i]] <- 10^gl[[i]] / sum(10^gl[[i]])
     }
     gp
+}
+
+.matrixOfListsToArray <- function(x) {
+    # find number of elements of each cell of x
+    n <- elementLengths(x)
+    maxn <- max(n)
+    
+    # for cells with less than the max number of elements, add NAs
+    idx <- n < maxn
+    x[idx] <- lapply(x[idx], function(a){c(a, rep(NA, maxn-length(a)))})
+    
+    # unlist and convert to array
+    x <- array(unlist(x), dim=c(maxn, nrow(x), ncol(x)),
+               dimnames=c(NULL, rownames(x), colnames(x)))
+    x <- aperm(x, c(2,3,1))
+
+    x
 }
