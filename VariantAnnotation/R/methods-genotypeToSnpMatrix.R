@@ -27,9 +27,16 @@ setMethod("genotypeToSnpMatrix", "CollapsedVCF",
     } else {
         geno.cols <- row.names(geno(exptData(x)[["header"]]))
         if ("GP" %in% geno.cols) {
-            gt <- .matrixOfListsToArray(geno(x)$GP)
+            gt <- geno(x)$GP
+            if (mode(gt) == "list") {
+                gt <- .matrixOfListsToArray(gt)
+            }
         } else if ("GL" %in% geno.cols) {
-            gt <- GLtoGP(.matrixOfListsToArray(geno(x)$GL))
+            gt <- geno(x)$GL)
+            if (mode(gt) == "list") {
+                gt <- .matrixOfListsToArray(gt)
+            }
+            gt <- GLtoGP(gt)
         } else {
             warning("uncertain=TRUE requires GP or GL; returning NULL")
             return(NULL)
@@ -39,15 +46,18 @@ setMethod("genotypeToSnpMatrix", "CollapsedVCF",
     callGeneric(gt, ref, alt)
 })
 
-setMethod("genotypeToSnpMatrix", "matrix",
+setMethod("genotypeToSnpMatrix", "array",
           function(x, ref, alt, ...)
 {
-    # if mode of matrix is character, we have GT with a single value for each snp
-
-    # if mode of matrix is list, we have GP with multiple values for each snp
-    # for each sample, call probabilityToSnpMatrix
-    # use cbind2 to combine
+    # query ref and alt alleles for valid SNPs
+    altelt <- elementLengths(alt) == 1L    
+    altseq <- logical(length(alt))
+    idx <- rep(altelt, elementLengths(alt))
+    altseq[altelt] = width(unlist(alt))[idx] == 1L
+    snv <- altseq & (width(ref) == 1L)
   
+    # if x is a matrix, we have GT with a single value for each snp
+    if (is.matrix(x)) {
     map <- setNames(sapply(rep(c(0, 1, 2, 2, 3), 2), as.raw),
                     c(".|.", "0|0", "0|1", "1|0", "1|1",
                       "./.", "0/0", "0/1", "1/0", "1/1"))
@@ -57,16 +67,11 @@ setMethod("genotypeToSnpMatrix", "matrix",
         x[!diploid] <- ".|."
     }
 
-    altelt <- elementLengths(alt) == 1L
     if (!all(altelt)) {
         warning("variants with >1 ALT allele are set to NA")
         x[!altelt] <- ".|."
     }
 
-    altseq <- logical(length(alt))
-    idx <- rep(altelt, elementLengths(alt))
-    altseq[altelt] = width(unlist(alt))[idx] == 1L
-    snv <- altseq & (width(ref) == 1L)
     if (!all(snv)) {
         warning("non-single nucleotide variations are set to NA")
         x[!snv] <- ".|."
@@ -75,7 +80,30 @@ setMethod("genotypeToSnpMatrix", "matrix",
     mat <- matrix(map[x], nrow=ncol(x), ncol=nrow(x),
                   byrow=TRUE, dimnames=rev(dimnames(x)))
     genotypes <- new("SnpMatrix", mat)
+    } else {    
+    # if x is a 3D array, we have GP with multiple values for each snp
 
+
+    if (!all(altelt)) {
+        warning("variants with >1 ALT allele are set to NA")
+        x[!altelt,,] <- NA
+    }
+
+    if (!all(snv)) {
+        warning("non-single nucleotide variations are set to NA")
+        x[!snv,,] <- NA
+    }
+
+      
+        # for each sample, call probabilityToSnpMatrix
+        smlist <- list()
+        for (s in 1:ncol(x)) {
+            smlist[[s]] <- probabilityToSnpMatrix(x[,s,])
+        }
+        # use cbind2 to combine
+        genotypes <- do.call(cbind2, smlist)
+    }
+    
     flt <- !(snv & altelt)
     map <- .createMap(rownames(x), ref, alt, flt)
 
@@ -134,7 +162,7 @@ GLtoGP <- function(gl) {
     
     # unlist and convert to array
     x <- array(unlist(x), dim=c(maxn, nrow(x), ncol(x)),
-               dimnames=c(NULL, rownames(x), colnames(x)))
+               dimnames=list(NULL, rownames(x), colnames(x)))
     x <- aperm(x, c(2,3,1))
 
     x

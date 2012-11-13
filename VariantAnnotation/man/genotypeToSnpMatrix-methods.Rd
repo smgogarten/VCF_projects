@@ -2,25 +2,25 @@
 
 \alias{genotypeToSnpMatrix}
 \alias{genotypeToSnpMatrix,CollapsedVCF-method}
-\alias{genotypeToSnpMatrix,matrix-method}
-\alias{genotypeToSnpMatrix,matrix,DNAStringSet,DNAStringSetList-method}
+\alias{genotypeToSnpMatrix,array-method}
+\alias{genotypeToSnpMatrix,array,DNAStringSet,DNAStringSetList-method}
 
 
 \title{Convert genotype calls from a VCF file to a SnpMatrix object}
 
 \description{
-  Convert a matrix of genotype calls from the "GT" FORMAT field of a VCF
+  Convert an array of genotype calls from the "GT" FORMAT field of a VCF
   file to a \link[snpStats:SnpMatrix-class]{SnpMatrix}.
 }
 
 \usage{
 \S4method{genotypeToSnpMatrix}{CollapsedVCF}(x, ...)
-\S4method{genotypeToSnpMatrix}{matrix,DNAStringSet,DNAStringSetList}(x, ref, alt, ...)
+\S4method{genotypeToSnpMatrix}{array,DNAStringSet,DNAStringSetList}(x, ref, alt, ...)
 }
 
 \arguments{
-  \item{x}{A \code{CollapsedVCF} object or a \code{matrix} of genotype data from the "GT" FORMAT field 
-    of a VCF file.  This \code{matrix} is created with a call to \code{readVcf}
+  \item{x}{A \code{CollapsedVCF} object or a \code{array} of genotype data from the "GT" FORMAT field 
+    of a VCF file.  This \code{array} is created with a call to \code{readVcf}
     and can be accessed with \code{geno<VCF>}.
   }
   \item{ref}{A \code{DNAStringSet} of reference alleles.
@@ -32,7 +32,7 @@
 }
 
 \details{
-  \code{genotypeToSnpMatrix} converts a matrix of genotype calls from the 
+  \code{genotypeToSnpMatrix} converts an array of genotype calls from the 
   "GT" FORMAT field of a VCF file into a 
   \link[snpStats:SnpMatrix-class]{SnpMatrix}. The following caveats apply, 
 
