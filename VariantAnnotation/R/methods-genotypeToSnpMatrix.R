@@ -32,7 +32,7 @@ setMethod("genotypeToSnpMatrix", "CollapsedVCF",
                 gt <- .matrixOfListsToArray(gt)
             }
         } else if ("GL" %in% geno.cols) {
-            gt <- geno(x)$GL)
+            gt <- geno(x)$GL
             if (mode(gt) == "list") {
                 gt <- .matrixOfListsToArray(gt)
             }
@@ -58,50 +58,56 @@ setMethod("genotypeToSnpMatrix", "array",
   
     # if x is a matrix, we have GT with a single value for each snp
     if (is.matrix(x)) {
-    map <- setNames(sapply(rep(c(0, 1, 2, 2, 3), 2), as.raw),
-                    c(".|.", "0|0", "0|1", "1|0", "1|1",
-                      "./.", "0/0", "0/1", "1/0", "1/1"))
-    diploid <- x %in% names(map)
-    if (!all(diploid)) {
-        warning("non-diploid variants are set to NA")
-        x[!diploid] <- ".|."
-    }
+        map <- setNames(sapply(rep(c(0, 1, 2, 2, 3), 2), as.raw),
+                        c(".|.", "0|0", "0|1", "1|0", "1|1",
+                          "./.", "0/0", "0/1", "1/0", "1/1"))
+        diploid <- x %in% names(map)
+        if (!all(diploid)) {
+            warning("non-diploid variants are set to NA")
+            x[!diploid] <- ".|."
+        }
 
-    if (!all(altelt)) {
-        warning("variants with >1 ALT allele are set to NA")
-        x[!altelt] <- ".|."
-    }
+        if (!all(altelt)) {
+            warning("variants with >1 ALT allele are set to NA")
+            x[!altelt] <- ".|."
+        }
 
-    if (!all(snv)) {
-        warning("non-single nucleotide variations are set to NA")
-        x[!snv] <- ".|."
-    }
+        if (!all(snv)) {
+            warning("non-single nucleotide variations are set to NA")
+            x[!snv] <- ".|."
+        }
 
-    mat <- matrix(map[x], nrow=ncol(x), ncol=nrow(x),
-                  byrow=TRUE, dimnames=rev(dimnames(x)))
-    genotypes <- new("SnpMatrix", mat)
+        mat <- matrix(map[x], nrow=ncol(x), ncol=nrow(x),
+                      byrow=TRUE, dimnames=rev(dimnames(x)))
+        genotypes <- new("SnpMatrix", mat)
     } else {    
     # if x is a 3D array, we have GP with multiple values for each snp
 
+        if (!all(altelt)) {
+            warning("variants with >1 ALT allele are set to NA")
+            x[!altelt,,] <- NA
+        }
 
-    if (!all(altelt)) {
-        warning("variants with >1 ALT allele are set to NA")
-        x[!altelt,,] <- NA
-    }
+        if (!all(snv)) {
+            warning("non-single nucleotide variations are set to NA")
+            x[!snv,,] <- NA
+        }
 
-    if (!all(snv)) {
-        warning("non-single nucleotide variations are set to NA")
-        x[!snv,,] <- NA
-    }
-
+        # if there is more than one ALT allele for any variant,
+        # the 3rd dimension of the array will be too big
+        # any values here should already have been set to NA above
+        if (dim(x)[3] > 3) {
+            x <- x[,,1:3]
+        }
       
         # for each sample, call probabilityToSnpMatrix
         smlist <- list()
         for (s in 1:ncol(x)) {
-            smlist[[s]] <- probabilityToSnpMatrix(x[,s,])
+            sm <- probabilityToSnpMatrix(x[,s,])
+            rownames(sm) <- colnames(x)[s]
+            smlist[[s]] <- sm
         }
-        # use cbind2 to combine
-        genotypes <- do.call(cbind2, smlist)
+        genotypes <- do.call(rbind, smlist)
     }
     
     flt <- !(snv & altelt)
