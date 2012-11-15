@@ -100,6 +100,17 @@ setGeneric("scanVcf", signature = c("file", "param"),
 )
 
 ### -------------------------------------------------------------------------
+### filterVcf
+###
+
+setGeneric("filterVcf", signature = "file",
+           function(file, genome, destination, ..., verbose = FALSE,
+                    index = FALSE, filters = FilterRules(),
+                    param = ScanVcfParam())
+           standardGeneric("filterVcf")
+)
+
+### -------------------------------------------------------------------------
 ### VCF class 
 ###
 
@@ -185,25 +196,4 @@ setGeneric("contig", signature = "x",
 setGeneric("meta", signature = "x",
     function(x) standardGeneric("meta"),
 )
-
-### -------------------------------------------------------------------------
-### VAFilter and VAFilterResult 
-###
-
-setGeneric("name", 
-    function(x, ...) 
-    standardGeneric("name")
-)
-
-setGeneric("stats", 
-    function(x, ...) 
-    standardGeneric("stats")
-)
-
-setGeneric("vaFilter", signature = "fun",
-    function(fun, name=NA_character_, ...)
-    standardGeneric("vaFilter")
-)
-
-setGeneric(".vaValidity")
 
