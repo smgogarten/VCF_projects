@@ -58,15 +58,6 @@ setMethod("genotypeToSnpMatrix", "array",
   
     # if x is a matrix, we have GT with a single value for each snp
     if (is.matrix(x)) {
-        map <- setNames(sapply(rep(c(0, 1, 2, 2, 3), 2), as.raw),
-                        c(".|.", "0|0", "0|1", "1|0", "1|1",
-                          "./.", "0/0", "0/1", "1/0", "1/1"))
-        diploid <- x %in% names(map)
-        if (!all(diploid)) {
-            warning("non-diploid variants are set to NA")
-            x[!diploid] <- ".|."
-        }
-
         if (!all(altelt)) {
             warning("variants with >1 ALT allele are set to NA")
             x[!altelt] <- ".|."
@@ -75,6 +66,15 @@ setMethod("genotypeToSnpMatrix", "array",
         if (!all(snv)) {
             warning("non-single nucleotide variations are set to NA")
             x[!snv] <- ".|."
+        }
+        
+        map <- setNames(sapply(rep(c(0, 1, 2, 2, 3), 2), as.raw),
+                        c(".|.", "0|0", "0|1", "1|0", "1|1",
+                          "./.", "0/0", "0/1", "1/0", "1/1"))
+        diploid <- x %in% names(map)
+        if (!all(diploid)) {
+            warning("non-diploid variants are set to NA")
+            x[!diploid] <- ".|."
         }
 
         mat <- matrix(map[x], nrow=ncol(x), ncol=nrow(x),
