@@ -155,7 +155,11 @@ probabilityToSnpMatrix <- function(probs) {
 
 GLtoGP <- function(gl) {
     if (is.matrix(gl) & mode(gl) == "list") {
-        apply(gl, c(1,2), function(x){10^unlist(x) / sum(10^unlist(x), na.rm=TRUE)})
+        gp <- gl
+        for (i in 1:length(gp)) {
+            gp[[i]] <- 10^gl[[i]] / sum(10^gl[[i]], na.rm=TRUE)
+        }
+        gp
     } else if (is.array(gl) & length(dim(gl)) == 3) {
         aperm(apply(gl, c(1,2), function(x){10^x / sum(10^x, na.rm=TRUE)}), c(2,3,1))       
     } else {
