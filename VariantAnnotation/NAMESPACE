@@ -57,7 +57,7 @@ export(VCF, VCFHeader,
        FiveUTRVariants, ThreeUTRVariants, IntergenicVariants,
        SpliceSiteVariants, PromoterVariants, AllVariants,
        upstream, "upstream<-", downstream, "downstream<-",
-       probabilityToSnpMatrix)
+       probabilityToSnpMatrix, GLtoGP)
 
 exportMethods(scanVcf, scanVcfHeader, ScanVcfParam,
               readVcf, readVcfLongForm, writeVcf,

@@ -1,5 +1,5 @@
 
-test_gSM_matrix_GT <- function() {
+test_gSM_array_GT <- function() {
     mat <- matrix(c(".|.", "0|0", "0|1", "1|0", "1|1",
                     "./.", "0/0", "0/1", "1/0", "1/1"),
                   ncol=2, dimnames=list(1:5,1:2))
@@ -23,7 +23,7 @@ test_gSM_matrix_GT <- function() {
                              
 }
 
-test_gSM_matrix_GT_nondiploid<- function() {
+test_gSM_array_GT_2alt <- function() {
     mat <- matrix(c("0|1", "1|0", "1|1",
                     "1/2", "2/1", "2/2"),
                   ncol=2, dimnames=list(1:3,1:2))
@@ -43,7 +43,7 @@ test_gSM_matrix_GT_nondiploid<- function() {
     checkIdentical(map, gtsm$map)
 }
 
-test_gSM_matrix_GT_nonsnv <- function() {
+test_gSM_array_GT_nonsnv <- function() {
     mat <- matrix(c("0|0", "0|1", "1|0",
                     "0/0", "0/1", "1/0"),
                   ncol=2, dimnames=list(1:3,1:2))
@@ -61,6 +61,12 @@ test_gSM_matrix_GT_nonsnv <- function() {
     gtsm <- genotypeToSnpMatrix(mat, ref, alt)
     checkIdentical(sm, gtsm$genotypes)
     checkIdentical(map, gtsm$map)
+}
+
+test_gSM_VCF_GL <- function() {
+    fl <- system.file("extdata", "gl_chr1.vcf", package="VariantAnnotation")
+    vcf <- readVcf(fl, "hg19")
+    gtsm <- genotypeToSnpMatrix(vcf)
 }
 
 test_gSM_VCF_structural <- function() {
@@ -91,7 +97,7 @@ test_pSM_invalid <- function() {
     checkException(probabilityToSnpMatrix(probs))                      
 }
 
-test_gl2gp <- function() {
+test_gl2gp_array <- function() {
     probs <- aperm(array(c(0.4,0.3,0.3,
                            0.5,0.1,0.4,
                            0.9,0.05,0.05,
@@ -110,6 +116,24 @@ test_gl2gp <- function() {
     checkEquals(probs, gp)
 }
 
+test_gl2gp_matrix <- function() {
+    probs <- matrix(c(list(c(0.4,0.3,0.3)),
+                      list(c(0.5,0.1,0.4)),
+                      list(c(0.9,0.05,0.05)),
+                      list(c(0,1,0)),
+                      list(c(0,0,1)),
+                      list(c(1))),
+                    ncol=2)
+    gl <- probs
+    for (i in 1:nrow(probs)) {
+        for (j in 1:ncol(probs)) {
+            gl[i,j] <- list(log10(unlist(probs[i,j])))
+        }
+    }
+    gp <- GLtoGP(gl)
+    checkEquals(probs, gp)
+}
+
 test_matrixToArray <- function() {
     mat <- matrix(c(list(c(1,2,3)),
                     list(c(4,5,6)),
@@ -118,7 +142,7 @@ test_matrixToArray <- function() {
                     list(c(13,14)),
                     list(c(15))),
                   ncol=2)
-    arr <- .matrixOfListsToArray(mat)
+    arr <- VariantAnnotation:::.matrixOfListsToArray(mat)
     for (i in 1:nrow(mat)) {
         for (j in 1:ncol(mat)) {
             n <- elementLengths(mat[i,j])

@@ -60,12 +60,12 @@ setMethod("genotypeToSnpMatrix", "array",
     if (is.matrix(x)) {
         if (!all(altelt)) {
             warning("variants with >1 ALT allele are set to NA")
-            x[!altelt] <- ".|."
+            x[!altelt,] <- ".|."
         }
 
         if (!all(snv)) {
             warning("non-single nucleotide variations are set to NA")
-            x[!snv] <- ".|."
+            x[!snv,] <- ".|."
         }
         
         map <- setNames(sapply(rep(c(0, 1, 2, 2, 3), 2), as.raw),
@@ -149,12 +149,18 @@ probabilityToSnpMatrix <- function(probs) {
     } else {
         g <- post2g(probs)
     }
-    g <-  matrix(g, nrow=1, dimnames=list(NULL,rownames(probs)))
+    g <-  matrix(g, nrow=1, dimnames=list(NULL, rownames(probs)))
     new("SnpMatrix", g)
 }
 
 GLtoGP <- function(gl) {
-    aperm(apply(gl, c(1,2), function(x){10^x / sum(10^x, na.rm=TRUE)}), c(2,3,1))
+    if (is.matrix(gl) & mode(gl) == "list") {
+        apply(gl, c(1,2), function(x){10^unlist(x) / sum(10^unlist(x), na.rm=TRUE)})
+    } else if (is.array(gl) & length(dim(gl)) == 3) {
+        aperm(apply(gl, c(1,2), function(x){10^x / sum(10^x, na.rm=TRUE)}), c(2,3,1))       
+    } else {
+        stop("gl must be a matrix of lists or a 3D array")
+    }
 }
 
 .matrixOfListsToArray <- function(x) {
