@@ -132,7 +132,7 @@ setMethod("genotypeToSnpMatrix", "array",
 
 probabilityToSnpMatrix <- function(probs) {
     if (ncol(probs) != 3)
-        stop("input matrix should have 3 columns: P(RR), P(RA), P(AA)")
+        stop("input matrix should have 3 columns: P(A/A), P(A/B), P(B/B)")
 
     # skip missing values when checking for validity of probabilities
     missing <- rowSums(is.na(probs)) > 0

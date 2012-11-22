@@ -9,12 +9,12 @@
 \title{Convert genotype calls from a VCF file to a SnpMatrix object}
 
 \description{
-  Convert an array of genotype calls from the "GT" FORMAT field of a VCF
+  Convert an array of genotype calls from the "GT", "GP", or "GL" FORMAT field of a VCF
   file to a \link[snpStats:SnpMatrix-class]{SnpMatrix}.
 }
 
 \usage{
-\S4method{genotypeToSnpMatrix}{CollapsedVCF}(x, ...)
+\S4method{genotypeToSnpMatrix}{CollapsedVCF}(x, uncertain=FALSE, ...)
 \S4method{genotypeToSnpMatrix}{array,DNAStringSet,DNAStringSetList}(x, ref, alt, ...)
 }
 
@@ -23,6 +23,10 @@
     of a VCF file.  This \code{array} is created with a call to \code{readVcf}
     and can be accessed with \code{geno<VCF>}.
   }
+  \item{uncertain}{A logical indicating whether the genotypes to convert
+  should come from the
+  "GT" field (\code{uncertain=FALSE}) or the "GP" or "GL" field
+  (\code{uncertain=TRUE}).}
   \item{ref}{A \code{DNAStringSet} of reference alleles.
   }
   \item{alt}{A \code{DNAStringSetList} of alternate alleles. 
@@ -33,16 +37,16 @@
 
 \details{
   \code{genotypeToSnpMatrix} converts an array of genotype calls from the 
-  "GT" FORMAT field of a VCF file into a 
+  "GT", "GP", or "GL" FORMAT field of a VCF file into a 
   \link[snpStats:SnpMatrix-class]{SnpMatrix}. The following caveats apply, 
 
   - no distinction is made between phased and unphased genotypes
 
-  - only diploid calls are included; others are set to NA
+  - variants with >1 ALT allele are set to NA
 
   - only single nucleotide variants are included; others are set to NA
 
-  - variants with >1 ALT allele are set to NA
+  - only diploid calls are included; others are set to NA
 
   In VCF files, 0 represents the reference allele and integers greater than 0
   represent the alternate alleles (i.e., 2, 3, 4 would indicate the 2nd, 3rd
@@ -52,7 +56,13 @@
   as 0, 1, 2 or 3 where 0 = missing, 1 = "0/0", 2 = "0/1" or "1/0" and 
   3 = "1/1". In SnpMatrix terminology, "A" is the reference allele 
   and "B" is the risk allele. Equivalent statements to those made with 0 and 1 
-  allele values would be 0 = missing, 1 = "A/A", 2 = "A/B" or "B/A" and 3 = "B/B".
+  allele values would be 0 = missing, 1 = "A/A", 2 = "A/B" or "B/A" and
+  3 = "B/B".
+
+  If \code{uncertain=TRUE}, the posterior probabilities of the three
+  genotypes ("A/A", "A/B", "B/B") are encoded (approximately) as byte
+  values.  See the \link[snpStats]{snpStats} documentation for more
+  details.
 }
 
 \value{
@@ -107,6 +117,17 @@
   DataFrame(reference = ref(vcf), 
             alternate = CharacterList(as.list(alt(vcf))),
             row.names = rownames(vcf))
+
+  ## Read a vcf file with a "GL" field.
+  vcfFile <- system.file("extdata", "gl_chr1.vcf", package="VariantAnnotation") 
+  vcf <- readVcf(vcfFile, "hg19")
+
+  ## Convert the "GL" FORMAT field to a SnpMatrix
+  mat <- genotypeToSnpMatrix(vcf, uncertain=TRUE)
+
+  ## Compare original coding in the VCF file to the SnpMatrix coding.
+  geno(vcf)$GL
+  t(as(mat$genotype, "character"))
 }
 
 \keyword{manip}
