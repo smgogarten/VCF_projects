@@ -48,7 +48,7 @@ GLtoGP(gl)
   mode(gl)
 
   # convert to posterior probabilities
-  gp <- GPtoGL(gl)
+  gp <- GLtoGP(gl)
 }
 
 \keyword{manip}
