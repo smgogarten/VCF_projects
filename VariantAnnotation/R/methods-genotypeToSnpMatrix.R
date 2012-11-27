@@ -131,6 +131,10 @@ setMethod("genotypeToSnpMatrix", "array",
 }
 
 probabilityToSnpMatrix <- function(probs) {
+    ok <- suppressWarnings(require("snpStats", quietly=TRUE, 
+                                   character.only=TRUE))
+    ok || stop("'snpStats' required; try biocLite('snpStats')", call.=FALSE) 
+
     if (ncol(probs) != 3)
         stop("input matrix should have 3 columns: P(A/A), P(A/B), P(B/B)")
 
