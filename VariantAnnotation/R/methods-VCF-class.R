@@ -1,4 +1,4 @@
-### =========================================================================
+## =========================================================================
 ### VCF class methods 
 ### =========================================================================
 
@@ -47,7 +47,16 @@ setMethod("alt", "VCF",
     slot(x, "fixed")$ALT
 })
 
-setReplaceMethod("alt", c("VCF", "CharacterList"),
+setReplaceMethod("alt", c("CollapsedVCF", "CharacterList"),
+    function(x, value)
+{
+    if (length(value) != length(rowData(x)))
+        stop("length(value) must equal length(rowData(x))")
+    slot(x, "fixed")$ALT <- value
+    x
+})
+
+setReplaceMethod("alt", c("ExpandedVCF", "character"),
     function(x, value)
 {
     if (length(value) != length(rowData(x)))
@@ -88,10 +97,7 @@ setReplaceMethod("filt", c("VCF", "character"),
 setMethod("fixed", "VCF", 
     function(x) 
 {
-    gr <- rowData(x)
-    if (length(slot(x, "fixed")) != 0L)
-        values(gr) <- append(values(gr), slot(x, "fixed"))
-    gr
+    slot(x, "fixed")
 })
 
 setReplaceMethod("fixed", c("VCF", "DataFrame"),
@@ -102,14 +108,38 @@ setReplaceMethod("fixed", c("VCF", "DataFrame"),
     x
 })
 
+### rowData
+setMethod("rowData", "VCF", 
+    function(x) 
+{
+    gr <- slot(x, "rowData") 
+    if (length(slot(x, "fixed")) != 0L)
+        mcols(gr) <- append(mcols(gr), slot(x, "fixed"))
+    gr
+})
+
+setReplaceMethod("rowData", c("VCF", "GRanges"),
+    function(x, value)
+{
+    if (!is(value, "GRanges"))
+        stop("'value' must be a GRanges")
+    idx <- names(mcols(value)) %in% "paramRangeID"
+    fixed(x) <- mcols(value)[!idx] 
+    slot(x, "rowData") <- value[,idx]
+    validObject(x)
+    x
+})
+ 
 ### info 
 setMethod("info", "VCF", 
     function(x) 
 {
-    gr <- rowData(x)
-    if (length(slot(x, "info")) != 0L)
-        values(gr) <- append(values(gr), slot(x, "info"))
-    gr
+    info <- slot(x, "info")
+    if (any(duplicated(rownames(x))))
+        return(info)
+    if (length(info) != 0L)
+        rownames(info) <- rownames(x)
+    info
 })
 
 setReplaceMethod("info", c("VCF", "DataFrame"),
@@ -162,6 +192,12 @@ setReplaceMethod("strand", "VCF",
     x
 })
 
+### header
+setMethod("header", "VCF",
+    function(x)
+{ 
+    exptData(x)$header
+})
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Subsetting 
@@ -190,10 +226,12 @@ setMethod("[", c("VCF", "ANY", "ANY"),
     } else if (missing(i)) {
         callNextMethod(x, , j, ...)
     } else if (missing(j)) {
-        callNextMethod(x, i, , info=slot(x, "info")[ii,,drop=FALSE],
+        callNextMethod(x, i, , rowData=slot(x, "rowData")[i,,drop=FALSE],
+                       info=slot(x, "info")[ii,,drop=FALSE],
                        fixed=slot(x, "fixed")[ff,,drop=FALSE], ...)
     } else {
-        callNextMethod(x, i, j, info=slot(x, "info")[ii,,drop=FALSE],
+        callNextMethod(x, i, j, rowData=slot(x, "rowData")[i,,drop=FALSE],
+                       info=slot(x, "info")[ii,,drop=FALSE],
                        fixed=slot(x, "fixed")[ff,,drop=FALSE], ...)
     }
 })
@@ -212,7 +250,12 @@ setReplaceMethod("[",
     } else if (missing(i)) {
         callNextMethod(x, , j, ..., value=value)
     } else if (missing(j)) {
-        callNextMethod(x, i, , info=local({
+        callNextMethod(x, i, , rowData=local({
+            rd <- slot(x, "rowData")
+            rd[i,] <- slot(value, "rowData")
+            names(rd)[i] <- names(slot(value, "rowData"))
+            rd
+        }), info=local({
             ii <- slot(x, "info")
             ii[i,] <- slot(value, "info")
             ii 
@@ -222,7 +265,12 @@ setReplaceMethod("[",
             ff
         }), ..., value=value)
     } else {
-        callNextMethod(x, i, j, info=local({
+        callNextMethod(x, i, j, rowData=local({
+            rd <- slot(x, "rowData")
+            rd[i,] <- slot(value, "rowData")
+            names(rd)[i] <- names(slot(value, "rowData"))
+            rd
+        }), info=local({
             ii <- slot(x, "info")
             ii[i,] <- slot(value, "info")
             ii 
@@ -265,53 +313,65 @@ setMethod(show, "VCF",
     function(object)
 {
     paste0("This object is no longer valid. Please use updateObject() to ",
-          "create a CollapsedVCF instance.")
+           "create a CollapsedVCF instance.")
 })
 
 ### show method for CollapsedVCF and ExapandedVCF
 .showVCFSubclass <- function(object)
 {
-    selectSome <- IRanges:::selectSome
-    scat <- function(fmt, vals=character(), exdent=2, ...)
-    {
-        vals <- ifelse(nzchar(vals), vals, "''")
-        lbls <- paste(selectSome(vals), collapse=" ")
-        txt <- sprintf(fmt, length(vals), lbls)
-        cat(strwrap(txt, exdent=exdent, ...), sep="\n")
+    prettydescr <- function(desc) {
+        desc <- as.character(desc)
+        wd <- options()[["width"]] - 30
+        dwd <- nchar(desc)
+        desc <- substr(desc, 1, wd)
+        idx <- dwd > wd
+        substr(desc[idx], wd - 2, dwd[idx]) <- "..."
+        desc
     }
+    headerrec <- function(df, lbl, margin="  ") {
+        df$Description <- prettydescr(df$Description)
+        rownames(df) <- paste(margin, rownames(df))
+        print(df, right=FALSE)
+    }
+    printSmallGRanges <- function(x, margin)
+    {
+        lx <- length(x)
+        nc <- ncol(mcols(x))
+        nms <- names(mcols(x))
+        cat(margin, class(x), " with ",
+            nc, " metadata ", ifelse(nc == 1L, "column", "columns"),
+            ": ", paste0(nms, collapse=", "), "\n", sep="")
+    }
+    printSmallDataTable <- function(x, margin)
+    {
+        nc <- ncol(x)
+        nms <- names(x)
+        cat(margin, class(x), " with ",
+            nc, ifelse(nc == 1, " column", " columns"),
+            ": ", paste0(nms, collapse=", "), "\n", sep = "")
+    }
+    printSimpleList <- function(x, margin)
+    {
+        lo <- length(x)
+        nms <- names(x)
+        cat(margin, class(x), " of length ", lo, 
+            ": ", paste0(nms, collapse=", "), "\n", sep = "")
+    }
+    margin <- "  "
     cat("class:", class(object), "\n")
     cat("dim:", dim(object), "\n")
-    cat("genome:", unique(genome(rowData(object))), "\n")
-
-    expt <- names(exptData(object))
-    if (is.null(expt))
-        expt <- character(length(exptData(object)))
-    scat("exptData(%d): %s\n", expt)
-
-    fixed <- names(slot(object, "fixed")) 
-    if (is.null(fixed))
-        fixed <- character(ncol(values(fixed(object))))
-    scat("fixed(%d): %s\n", fixed)
-
-    info <- names(slot(object, "info")) 
-    if (is.null(info))
-        info <- character(ncol(values(info(object))))
-    scat("info(%d): %s\n", info)
-
-    nms <- names(geno(object, withDimnames=FALSE))
-    if (is.null(nms))
-        nms <- character(length(geno(object, withDimnames=FALSE)))
-    scat("geno(%d): %s\n", nms)
-
-    dimnames <- dimnames(object)
-    dlen <- sapply(dimnames, length)
-    if (dlen[[1]]) scat("rownames(%d): %s\n", dimnames[[1]])
-    else scat("rownames: NULL\n")
-    scat("rowData values names(%d): %s\n",
-         names(values(rowData(object))))
-    if (dlen[[2]]) scat("colnames(%d): %s\n", dimnames[[2]])
-    else cat("colnames: NULL\n")
-    scat("colData names(%d): %s\n", names(colData(object)))
+    cat("rowData(vcf):\n")
+    printSmallGRanges(rowData(object), margin=margin)
+    cat("info(vcf):\n")
+    printSmallDataTable(info(object), margin=margin) 
+    cat("info(header(vcf)):\n")
+    info <- as.data.frame(info(exptData(object)$header))
+    headerrec(info, "info")
+    cat("geno(vcf):\n")
+    printSimpleList(geno(object), margin=margin) 
+    cat("geno(header(vcf)):\n")
+    geno <- as.data.frame(geno(exptData(object)$header))
+    headerrec(geno, "geno")
 }
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -322,14 +382,10 @@ setMethod(show, "VCF",
 setMethod("updateObject", "VCF",
     function(object, ..., verbose=FALSE)
     {
-        if (verbose)
-            message("updateObject(object = 'VCF')")
-        VCF(rowData=rowData(object), colData=colData(object),
-            exptData=exptData(object), info=mcols(info(object))[-1],
-            fixed=mcols(fixed(object))[-1], geno=geno(object))
+        if (verbose) 
+            message("updateObject(object = 'VCF')") 
+        VCF(rowData=rowData(object), colData=colData(object), exptData=exptData(object), 
+            info=mcols(info(object))[-1], fixed=mcols(fixed(object))[-1], geno=geno(object))
     }
 )
-
-
-
 

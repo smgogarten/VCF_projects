@@ -74,14 +74,14 @@ setAs("CollapsedVCF", "SummarizedExperiment",
 {
     xlen <- dim(object)[1]
     ffld <- slot(object, "fixed")
-    nms <- names(ffld)
+    nms <- colnames(ffld)
 
     if (nrow(ffld) != 0) {
         if (nrow(ffld) != xlen)
             return(paste("'fixed(object)' and 'rowData(object) must have the same ",
                    "number of rows", sep=""))
         if (!all(nms %in% c("paramRangeID", "REF", "ALT", "QUAL", "FILTER")))
-            return(paste("'mcols(fixed(object))' colnames must be ",
+            return(paste("'fixed(object)' colnames must be ",
                    "'REF', 'ALT', 'QUAL' and 'FILTER'", sep=""))
         if ("REF" %in% nms) 
             if (!is(ffld$REF, "DNAStringSet"))
@@ -125,9 +125,9 @@ setAs("CollapsedVCF", "SummarizedExperiment",
     if (length(ffld) != 0L) {
         alt <- alt(object)
         if (length(alt) != 0L)
-            if (!is(alt, "DNAStringSet") && !is(alt, "CharacterList")) 
+            if (!is(alt, "DNAStringSet") && !is.character(alt)) 
                 return(paste("'alt(object)' must be a DNAStringSet or a ",
-                       "CharacterList", sep=""))
+                       "character", sep=""))
     } 
     NULL
 }

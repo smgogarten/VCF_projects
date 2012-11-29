@@ -63,7 +63,7 @@ setMethod(writeVcf, c("VCF", "connection"),
     QUAL[is.na(QUAL)] <- "."
     FILTER <- filt(obj)
     FILTER[is.na(FILTER)] <- "."
-    INFO <- .makeVcfInfo(values(info(obj))[-1])
+    INFO <- .makeVcfInfo(info(obj))
     ans <- paste(CHROM, POS, ID, REF, ALT, QUAL, FILTER, INFO, sep = "\t")
     if (length(geno(obj)) > 0L) {
       GENO <- .makeVcfGeno(geno(obj))
@@ -138,8 +138,8 @@ setMethod(writeVcf, c("VCF", "connection"),
     if (is.list(genoMat)) {
       genoMatList <- relist(genoMatFlat, PartitioningByEnd(genoMat))
       genoMatFlat <- .pasteCollapse(genoMatList, ",")
-      genoMat <- matrix(genoMatFlat, nrow(genoMat), ncol(genoMat))
-    } else genoMat <- genoMatFlat
+    }
+    genoMat <- matrix(genoMatFlat, nrow(genoMat), ncol(genoMat))
 
     formatMatPerSub <- matrix(rep(t(formatMat), nsub), nsub * nrec,
                               length(geno), byrow = TRUE)
@@ -168,7 +168,7 @@ setMethod(writeVcf, c("VCF", "connection"),
     })
 
     ## Add names to non-NA data.
-    infoMat <- matrix(".", nrow(info),ncol(info)) 
+    infoMat <- matrix(".", nrow(info), ncol(info)) 
     logicals <- sapply(info, is.logical)
     infoMat[,logicals] <- unlist(Map(function(l, nm) {
       ifelse(l, nm, NA_character_)
