@@ -22,6 +22,10 @@ setMethod("genotypeToSnpMatrix", "CollapsedVCF",
     }
     ref <- ref(x)
 
+    if (ncol(x) == 0) {
+        warning("no samples in VCF")
+    }
+    
     if (!uncertain) {
         gt <- geno(x)$GT
     } else {

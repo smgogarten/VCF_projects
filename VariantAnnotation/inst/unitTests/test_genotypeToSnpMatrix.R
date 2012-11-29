@@ -81,6 +81,12 @@ test_gSM_VCF_structural <- function() {
     checkIdentical(NULL, genotypeToSnpMatrix(vcf))
 }
 
+test_gSM_VCF_noSamples <- function() {
+    fl <- system.file("unitTests", "cases", "FORMAT_header_no_SAMPLEs.vcf", package="VariantAnnotation")
+    vcf <- readVcf(fl, "hg19")
+    checkEquals(0, nrow(genotypeToSnpMatrix(vcf)$genotypes))
+}
+
 test_pSM_valid <- function() {
     probs <- matrix(c(1,0,0,
                       0,1,0,
