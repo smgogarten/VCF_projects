@@ -38,7 +38,9 @@ locateVariants(query, subject, region, ...)
 \arguments{
   \item{query}{A \link[IRanges]{Ranges}, \link[GenomicRanges]{GRanges} or 
     \linkS4class{VCF} object containing the variants. Metadata columns are 
-    allowed but are ignored. 
+    allowed but are ignored.
+
+    NOTE: Circular chromosomes are not currently supported. 
   }
   \item{subject}{A \link[GenomicFeatures]{TranscriptDb} or \code{GRangesList}
     object that serves as the annotation. GFF files can be converted to
@@ -128,8 +130,9 @@ locateVariants(query, subject, region, ...)
 }
 \value{
   A \code{GRanges} object with a row for each variant-transcript match.
-  Columns are \code{LOCATION}, \code{QUERYID}, \code{TXID}, \code{GENEID} and 
-  \code{CDSID}. 
+  Columns are \code{LOCATION}, \code{QUERYID}, \code{TXID}, \code{GENEID},
+  \code{PRECEDEID}, \code{FOLLOWID} and \code{CDSID}. Each column is
+  described in detail below. 
 
  \describe{
     \item{\code{LOCATION}}{

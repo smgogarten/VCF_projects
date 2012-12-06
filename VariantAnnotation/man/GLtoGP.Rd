@@ -29,7 +29,7 @@ GLtoGP(gl)
 }
 
 \author{
-  Stephanie Gogarten
+  Stephanie Gogarten  <sdmorris@u.washington.edu>
 }
 
 \seealso{

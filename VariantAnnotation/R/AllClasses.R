@@ -14,7 +14,7 @@ setClass("CollapsedVCF", contains="VCF") ## ALT is DNAStrinsSetList
 
 setClass("ExpandedVCF", contains="VCF")  ## ALT is DNAStringSet 
 
-### Coercion 
+### Coercion: 
 ### Recursion problem in an automatically generated coerce method requires
 ### that we handle coercion from subclasses to SummarizedExperiment.
 
@@ -74,14 +74,14 @@ setAs("CollapsedVCF", "SummarizedExperiment",
 {
     xlen <- dim(object)[1]
     ffld <- slot(object, "fixed")
-    nms <- names(ffld)
+    nms <- colnames(ffld)
 
-    if (length(ffld) != 0) {
+    if (nrow(ffld) != 0) {
         if (nrow(ffld) != xlen)
             return(paste("'fixed(object)' and 'rowData(object) must have the same ",
                    "number of rows", sep=""))
         if (!all(nms %in% c("paramRangeID", "REF", "ALT", "QUAL", "FILTER")))
-            return(paste("'mcols(fixed(object))' colnames must be ",
+            return(paste("'fixed(object)' colnames must be ",
                    "'REF', 'ALT', 'QUAL' and 'FILTER'", sep=""))
         if ("REF" %in% nms) 
             if (!is(ffld$REF, "DNAStringSet"))
@@ -108,26 +108,28 @@ setAs("CollapsedVCF", "SummarizedExperiment",
 
 .valid.CollapsedVCF.alt <- function(object)
 {
-    if (nrow(object) == 0L)
-        return(NULL)
-    alt <- alt(object)
-    if (!is(alt, "DNAStringSetList") && !is(alt, "CharacterList")) 
-        paste("'alt(object)' must be a DNAStringSetList or a ",
-              "CharacterList", sep="")
-    else
-        NULL
+    ffld <- slot(object, "fixed")
+    if (length(ffld) != 0L) {
+        alt <- alt(object)
+        if (length(alt) != 0L)
+            if (!is(alt, "DNAStringSetList") && !is(alt, "CharacterList")) 
+                return(paste("'alt(object)' must be a DNAStringSetList or a ",
+                       "CharacterList", sep=""))
+    } 
+    NULL
 }
  
 .valid.ExpandedVCF.alt <- function(object)
 {
-    if (nrow(object) == 0L)
-        return(NULL)
-    alt <- alt(object)
-    if (!is(alt, "DNAStringSet") && !is(alt, "CharacterList")) 
-        paste("'alt(object)' must be a DNAStringSet or a ",
-              " CharacterList", sep="")
-    else
-        NULL
+    ffld <- slot(object, "fixed")
+    if (length(ffld) != 0L) {
+        alt <- alt(object)
+        if (length(alt) != 0L)
+            if (!is(alt, "DNAStringSet") && !is.character(alt)) 
+                return(paste("'alt(object)' must be a DNAStringSet or a ",
+                       "character", sep=""))
+    } 
+    NULL
 }
 
 .valid.CollapsedVCF <- function(object)
@@ -162,29 +164,6 @@ setClass("VCFHeader",
         reference="character",
         samples="character",
         header="SimpleDataFrameList"
-    )
-)
-
-### ------------------------------------------------------------------------- 
-### VAFilters classes 
-###
-
-setClass(".VAUtil", representation("VIRTUAL"))
-
-.vaValidity <- function(object) TRUE
-setClass("VAFilter",
-    contains=c("function", ".VAUtil"),
-    representation(
-        name="ScalarCharacter"
-    ),
-    validity=.vaValidity
-)
-
-setClass("VAFilterResult",
-    contains=c("logical", ".VAUtil"),
-    representation(
-      name="ScalarCharacter",
-      stats="data.frame"
     )
 )
 

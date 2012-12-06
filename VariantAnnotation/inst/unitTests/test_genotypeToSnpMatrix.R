@@ -20,7 +20,6 @@ test_gSM_array_GT <- function() {
     gtsm <- genotypeToSnpMatrix(mat, ref, alt)
     checkIdentical(sm, gtsm$genotypes)
     checkIdentical(map, gtsm$map)
-                             
 }
 
 test_gSM_array_GT_2alt <- function() {
@@ -72,7 +71,8 @@ test_gSM_VCF_GL <- function() {
     checkIdentical(rownames(vcf), gtsm$map$snp.names)
     checkIdentical(ref(vcf), gtsm$map$allele.1)
     checkIdentical(alt(vcf), gtsm$map$allele.2)
-    checkEquals(unlist(GLtoGP(geno(vcf)$GL)[1,4]), as.vector(g2post(gtsm$genotypes[4,1])))
+    checkEquals(unlist(GLtoGP(geno(vcf)$GL)[1,4]), 
+                as.vector(g2post(gtsm$genotypes[4,1])))
 }
 
 test_gSM_VCF_structural <- function() {
@@ -96,7 +96,7 @@ test_pSM_valid <- function() {
                     dimnames=list(1:4,c("RR","RA","AA")))
     sm <- new("SnpMatrix", matrix(as.raw(c(1,2,3,0)), nrow=1,
                                   dimnames=list(NULL,1:4)))
-    checkIdentical(sm, probabilityToSnpMatrix(probs))                      
+    checkIdentical(sm, probabilityToSnpMatrix(probs))
 }
 
 test_pSM_invalid <- function() {
@@ -106,7 +106,7 @@ test_pSM_invalid <- function() {
                       0,0,1,
                       NA,NA,NA),
                     ncol=3, byrow=TRUE)
-    checkException(probabilityToSnpMatrix(probs))                      
+    checkException(probabilityToSnpMatrix(probs))
 }
 
 test_GLtoGP_array <- function() {

@@ -68,7 +68,7 @@ test_scanVcf_FORMAT_header_no_SAMPLEs <- function()
     checkTrue(all(sapply(geno, nrow) == 5L))
     checkTrue(all(sapply(geno, ncol) == 0L))
 }
-    
+ 
 test_scanVcf_no_INFO_header <- function()
 {
     fl <- system.file(package="VariantAnnotation", "unitTests",
@@ -83,3 +83,21 @@ test_scanVcf_crlf <- function()
     writeLines(readLines(fl), xx <- tempfile(), sep="\r\n")
     checkIdentical(scanVcfHeader(fl), scanVcfHeader(xx))
 }
+
+test_scanVcfHeader_VarScan <- function()
+{
+    fl <- system.file("unitTests", "cases", "VarScan_header.vcf",
+                      package="VariantAnnotation")
+    hd <- scanVcfHeader(fl)
+    checkIdentical(dim(info(hd)), c(7L, 3L))
+    checkIdentical(names(info(hd)), c("Number", "Type", "Description"))
+    expected <- paste0("Somatic status of variant ",
+        "(0=Reference,1=Germline,2=Somatic,3=LOH, or 5=Unknown)")
+    checkIdentical(info(hd)["SS", "Description"], expected)
+
+    fl <- system.file("extdata", "ex2.vcf",
+                      package="VariantAnnotation")
+    hd <- scanVcfHeader(fl)
+    checkIdentical(length(names(header(hd))), 5L)
+    checkIdentical(header(hd)$contig[["assembly"]], "B36")
+} 

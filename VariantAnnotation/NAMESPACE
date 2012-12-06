@@ -36,14 +36,16 @@ importMethodsFrom(IRanges, "%in%", append, as.matrix, as.vector,
                   split, start, "start<-", subjectHits, "subseq<-", substring, 
                   unique, unlist, values, "values<-", which, width, 
                   expand)
-importFrom(IRanges, CharacterList, DataFrame, IRanges, PartitioningByWidth, 
-           successiveViews, expand)
+importFrom(IRanges, CharacterList, DataFrame, IRanges, isSingleString,
+           PartitioningByWidth, successiveViews, subsetByFilter, expand)
 
 importMethodsFrom(DBI, dbCommit, dbConnect, dbDisconnect, dbExistsTable, 
                   dbGetQuery, dbReadTable, dbWriteTable, dbListTables, 
                   dbListFields)
 
 importClassesFrom(BSgenome, BSgenome)
+
+importFrom(utils, txtProgressBar, setTxtProgressBar)
 
 #exportPattern("^[^\\.]")
 
@@ -52,14 +54,14 @@ exportClassPattern("^.*$")
 export(VCF, VCFHeader, 
        vcfWhich, "vcfWhich<-", vcfFixed, "vcfFixed<-", vcfInfo, "vcfInfo<-", 
        vcfGeno, "vcfGeno<-", vcfTrimEmpty, "vcfTrimEmpty<-", 
-       VAFilterResult, dbSNPFilter, regionFilter, compose,
        duplicateRSID, CodingVariants, IntronVariants,
        FiveUTRVariants, ThreeUTRVariants, IntergenicVariants,
        SpliceSiteVariants, PromoterVariants, AllVariants,
        upstream, "upstream<-", downstream, "downstream<-",
        probabilityToSnpMatrix, GLtoGP)
 
-exportMethods(scanVcf, scanVcfHeader, ScanVcfParam,
+exportMethods(filterVcf,
+              scanVcf, scanVcfHeader, ScanVcfParam,
               readVcf, readVcfLongForm, writeVcf,
               predictCoding, getTranscriptSeqs, refLocsToLocalLocs, 
               MatrixToSnpMatrix, genotypeToSnpMatrix,
@@ -73,6 +75,4 @@ exportMethods(scanVcf, scanVcfHeader, ScanVcfParam,
 
               reference, samples, header, meta,
 
-              keys, cols, select,
- 
-              vaFilter, name, stats, Logic, show)
+              keys, cols, select)

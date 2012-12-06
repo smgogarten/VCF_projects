@@ -17,7 +17,8 @@ setMethod("genotypeToSnpMatrix", "CollapsedVCF",
 
     alt <- alt(x)
     if (is(alt, "CompressedCharacterList")) {
-        warning("structural variants detected and not supported by SnpMatrix; returning NULL")
+        warning(paste0("structural variants detected and not supported ",
+                "by SnpMatrix; returning NULL"))
         return(NULL)
     }
     ref <- ref(x)
@@ -53,13 +54,17 @@ setMethod("genotypeToSnpMatrix", "CollapsedVCF",
 setMethod("genotypeToSnpMatrix", "array",
           function(x, ref, alt, ...)
 {
+    if (!is(ref, "DNAStringSet"))
+        stop("'ref' must be a DNAStringSet")
+    if (!is(alt, "DNAStringSetList"))
+        stop("'alt' must be a DNAStringSetList")
     # query ref and alt alleles for valid SNPs
-    altelt <- elementLengths(alt) == 1L    
+    altelt <- elementLengths(alt) == 1L 
     altseq <- logical(length(alt))
     idx <- rep(altelt, elementLengths(alt))
     altseq[altelt] = width(unlist(alt))[idx] == 1L
     snv <- altseq & (width(ref) == 1L)
-  
+    
     # if x is a matrix, we have GT with a single value for each snp
     if (is.matrix(x)) {
         if (!all(altelt)) {
@@ -84,7 +89,7 @@ setMethod("genotypeToSnpMatrix", "array",
         mat <- matrix(map[x], nrow=ncol(x), ncol=nrow(x),
                       byrow=TRUE, dimnames=rev(dimnames(x)))
         genotypes <- new("SnpMatrix", mat)
-    } else {    
+    } else {
     # if x is a 3D array, we have GP with multiple values for each snp
 
         if (!all(altelt)) {
@@ -103,7 +108,7 @@ setMethod("genotypeToSnpMatrix", "array",
         if (dim(x)[3] > 3) {
             x <- x[,,1:3]
         }
-      
+ 
         # for each sample, call probabilityToSnpMatrix
         smlist <- list()
         for (s in 1:ncol(x)) {
@@ -113,7 +118,7 @@ setMethod("genotypeToSnpMatrix", "array",
         }
         genotypes <- do.call(rbind, smlist)
     }
-    
+ 
     flt <- !(snv & altelt)
     map <- .createMap(rownames(x), ref, alt, flt)
 
@@ -169,7 +174,9 @@ GLtoGP <- function(gl) {
         }
         gp
     } else if (is.array(gl) & length(dim(gl)) == 3) {
-        aperm(apply(gl, c(1,2), function(x){10^x / sum(10^x, na.rm=TRUE)}), c(2,3,1))       
+        aperm(apply(gl, c(1,2), function(x) 
+                  10^x / sum(10^x, na.rm=TRUE)), 
+              c(2,3,1))
     } else {
         stop("gl must be a matrix of lists or a 3D array")
     }
@@ -179,11 +186,11 @@ GLtoGP <- function(gl) {
     # find number of elements of each cell of x
     n <- elementLengths(x)
     maxn <- max(n)
-    
+ 
     # for cells with less than the max number of elements, add NAs
     idx <- n < maxn
     x[idx] <- lapply(x[idx], function(a){c(a, rep(NA, maxn-length(a)))})
-    
+ 
     # unlist and convert to array
     x <- array(unlist(x), dim=c(maxn, nrow(x), ncol(x)),
                dimnames=list(NULL, rownames(x), colnames(x)))

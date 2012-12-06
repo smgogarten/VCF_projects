@@ -3,35 +3,38 @@
 \alias{genotypeToSnpMatrix}
 \alias{genotypeToSnpMatrix,CollapsedVCF-method}
 \alias{genotypeToSnpMatrix,array-method}
-\alias{genotypeToSnpMatrix,array,DNAStringSet,DNAStringSetList-method}
-
 
 \title{Convert genotype calls from a VCF file to a SnpMatrix object}
 
 \description{
-  Convert an array of genotype calls from the "GT", "GP", or "GL" FORMAT field of a VCF
-  file to a \link[snpStats:SnpMatrix-class]{SnpMatrix}.
+  Convert an array of genotype calls from the "GT", "GP", or "GL" 
+  FORMAT field of a VCF file to a \link[snpStats:SnpMatrix-class]{SnpMatrix}.
 }
 
 \usage{
 \S4method{genotypeToSnpMatrix}{CollapsedVCF}(x, uncertain=FALSE, ...)
-\S4method{genotypeToSnpMatrix}{array,DNAStringSet,DNAStringSetList}(x, ref, alt, ...)
+\S4method{genotypeToSnpMatrix}{array}(x, ref, alt, ...)
 }
 
 \arguments{
-  \item{x}{A \code{CollapsedVCF} object or a \code{array} of genotype data from the "GT" FORMAT field 
-    of a VCF file.  This \code{array} is created with a call to \code{readVcf}
-    and can be accessed with \code{geno<VCF>}.
+  \item{x}{
+    A \code{CollapsedVCF} object or a \code{array} of genotype data 
+    from the "GT" FORMAT field of a VCF file.  This \code{array} is created 
+    with a call to \code{readVcf} and can be accessed with \code{geno(<VCF>)}.
   }
-  \item{uncertain}{A logical indicating whether the genotypes to convert
-  should come from the
-  "GT" field (\code{uncertain=FALSE}) or the "GP" or "GL" field
-  (\code{uncertain=TRUE}).}
-  \item{ref}{A \code{DNAStringSet} of reference alleles.
+  \item{uncertain}{
+    A logical indicating whether the genotypes to convert
+    should come from the "GT" field (\code{uncertain=FALSE}) or the "GP" or 
+    "GL" field (\code{uncertain=TRUE}).
   }
-  \item{alt}{A \code{DNAStringSetList} of alternate alleles. 
+  \item{ref}{
+    A \code{DNAStringSet} of reference alleles.
   }
-  \item{\dots}{Additional arguments, passed to methods.
+  \item{alt}{
+    A \code{DNAStringSetList} of alternate alleles. 
+  }
+  \item{\dots}{
+    Additional arguments, passed to methods.
   }
 }
 
@@ -39,14 +42,12 @@
   \code{genotypeToSnpMatrix} converts an array of genotype calls from the 
   "GT", "GP", or "GL" FORMAT field of a VCF file into a 
   \link[snpStats:SnpMatrix-class]{SnpMatrix}. The following caveats apply, 
-
-  - no distinction is made between phased and unphased genotypes
-
-  - variants with >1 ALT allele are set to NA
-
-  - only single nucleotide variants are included; others are set to NA
-
-  - only diploid calls are included; others are set to NA
+  \itemize{
+    \item{no distinction is made between phased and unphased genotypes}
+    \item{variants with >1 ALT allele are set to NA}
+    \item{only single nucleotide variants are included; others are set to NA}
+    \item{only diploid calls are included; others are set to NA}
+  }
 
   In VCF files, 0 represents the reference allele and integers greater than 0
   represent the alternate alleles (i.e., 2, 3, 4 would indicate the 2nd, 3rd
@@ -67,19 +68,20 @@
 
 \value{
   A list with the following elements,
-
-  \item{genotypes}{The output genotype data as an object of class 
-    \code{"SnpMatrix"}. The columns are snps and the rows are the samples. See 
-    the help page for \link[snpStats:SnpMatrix-class]{SnpMatrix} for complete 
-    details of the class structure.}
-
-  \item{map}{A \code{DataFrame} giving the snp names and alleles at each locus.
-    The \code{ignore} column indicates which variants were set to NA because they 
-    met one or more of the caveats stated above.} 
+  \item{genotypes}{
+    The output genotype data as an object of class 
+    \code{"SnpMatrix"}. The columns are snps and the rows are the samples. 
+    See ?\code{SnpMatrix} details of the class structure.
+  }
+  \item{map}{ 
+    A \code{DataFrame} giving the snp names and alleles at each locus.
+    The \code{ignore} column indicates which variants were set to \code{NA}
+    (see \code{NA} criteria in 'details' section).
+  } 
 }
 
 \author{
-  Valerie Obenchain <vobencha@fhcrc.org>, Stephanie Gogarten
+  Stephanie Gogarten, Valerie Obenchain <vobencha@fhcrc.org>
 }
 
 \seealso{
@@ -89,45 +91,50 @@
 }
 
 \examples{
-  ## Read a vcf file into a VCF object.
-  vcfFile <- system.file("extdata", "ex2.vcf", package="VariantAnnotation") 
-  vcf <- readVcf(vcfFile, "hg19")
+  ## ----------------------------------------------------------------
+  ## Non-probability based snp encoding using "GT"
+  ## ----------------------------------------------------------------
+  fl <- system.file("extdata", "ex2.vcf", package="VariantAnnotation") 
+  vcf <- readVcf(fl, "hg19")
 
-  ## Convert the "GT" FORMAT field to a SnpMatrix
+  ## This file has no "GL" or "GP" field so we use "GT".
+  geno(vcf)
+
+  ## Convert the "GT" FORMAT field to a SnpMatrix.
   mat <- genotypeToSnpMatrix(vcf)
 
   ## The result is a list of length 2.
   names(mat)
 
-  ## Compare original coding in the VCF file to the SnpMatrix coding.
+  ## Compare coding in the VCF file to the SnpMatrix.
   geno(vcf)$GT
   t(as(mat$genotype, "character"))
 
-  ## The 'ignore' column of the map element indicates which variants 
-  ## were set to missing as per the criteria stated in the details section. 
+  ## The 'ignore' column in 'map' indicates which variants 
+  ## were set to NA. Variant rs6040355 was ignored because 
+  ## it has multiple alternate alleles, microsat1 is not a 
+  ## snp, and chr20:1230237 has no alternate allele.
   mat$map
 
-  ## Variant rs6040355 was ignored because it has more than one alternate
-  ## allele. The microsat1 variant has a reference allele with length
-  ## greater than 1 and more than 1 alternate allele.
-  ## Variant chr20:1230237 was ignored because the alternate allele is not
-  ## of length 1. 
-
-  ## View the reference and alternate alleles. 
-  DataFrame(reference = ref(vcf), 
-            alternate = CharacterList(as.list(alt(vcf))),
-            row.names = rownames(vcf))
-
+  ## ----------------------------------------------------------------
+  ## Probability-based encoding using "GL" or "GP"
+  ## ----------------------------------------------------------------
   ## Read a vcf file with a "GL" field.
-  vcfFile <- system.file("extdata", "gl_chr1.vcf", package="VariantAnnotation") 
-  vcf <- readVcf(vcfFile, "hg19")
+  fl <- system.file("extdata", "gl_chr1.vcf", package="VariantAnnotation") 
+  vcf <- readVcf(fl, "hg19")
+  geno(vcf)
 
   ## Convert the "GL" FORMAT field to a SnpMatrix
   mat <- genotypeToSnpMatrix(vcf, uncertain=TRUE)
 
-  ## Compare original coding in the VCF file to the SnpMatrix coding.
-  geno(vcf)$GL
-  t(as(mat$genotype, "character"))
+  ## Only 3 of the 9 variants passed the filters.
+  mat$map
+
+  ## Compare original vs SnpMatrix coding for a subset of
+  ## samples in variant rs180734498. 
+  geno(vcf)$GL["rs180734498", 14:16]
+  t(as(mat$genotype, "character"))["rs180734498", 14:16]
 }
 
 \keyword{manip}
+\keyword{methods}
