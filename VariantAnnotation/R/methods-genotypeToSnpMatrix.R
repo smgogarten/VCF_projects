@@ -8,6 +8,15 @@
 ## 2 = heterozygous (0|1 or 1|0) 
 ## 3 = homozygous alternate (risk) allele (1|1)
 
+## empty matrix to return if conditions not met
+.emptySnpMatrix <- function() {
+  list(genotype=new("SnpMatrix"), 
+       map=DataFrame(snp.names=character(), 
+                     allele.1=DNAStringSet(), 
+                     allele.2=DNAStringSetList(), 
+                     ignore=character()))
+}
+
 setMethod("genotypeToSnpMatrix", "CollapsedVCF",
           function(x, uncertain=FALSE, ...)
 {
@@ -19,7 +28,7 @@ setMethod("genotypeToSnpMatrix", "CollapsedVCF",
     if (is(alt, "CompressedCharacterList")) {
         warning(paste0("structural variants detected and not supported ",
                 "by SnpMatrix; returning NULL"))
-        return(NULL)
+        return(.emptySnpMatrix())
     }
     ref <- ref(x)
 
@@ -44,7 +53,7 @@ setMethod("genotypeToSnpMatrix", "CollapsedVCF",
             gt <- GLtoGP(gt)
         } else {
             warning("uncertain=TRUE requires GP or GL; returning NULL")
-            return(NULL)
+            return(.emptySnpMatrix())
         }
     }
 

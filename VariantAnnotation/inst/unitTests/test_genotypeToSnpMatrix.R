@@ -78,7 +78,7 @@ test_gSM_VCF_GL <- function() {
 test_gSM_VCF_structural <- function() {
     fl <- system.file("extdata", "structural.vcf", package="VariantAnnotation")
     vcf <- readVcf(fl, "hg19")
-    checkIdentical(NULL, genotypeToSnpMatrix(vcf))
+    checkIdentical(.emptySnpMatrix(), genotypeToSnpMatrix(vcf))
 }
 
 test_gSM_VCF_noSamples <- function() {
@@ -154,7 +154,7 @@ test_matrixToArray <- function() {
                     list(c(13,14)),
                     list(c(15))),
                   ncol=2)
-    arr <- VariantAnnotation:::.matrixOfListsToArray(mat)
+    arr <- .matrixOfListsToArray(mat)
     for (i in 1:nrow(mat)) {
         for (j in 1:ncol(mat)) {
             n <- elementLengths(mat[i,j])
