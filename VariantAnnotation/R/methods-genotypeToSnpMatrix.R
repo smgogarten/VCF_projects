@@ -10,11 +10,11 @@
 
 ## empty matrix to return if conditions not met
 .emptySnpMatrix <- function() {
-  list(genotype=new("SnpMatrix"), 
-       map=DataFrame(snp.names=character(), 
-                     allele.1=DNAStringSet(), 
-                     allele.2=DNAStringSetList(), 
-                     ignore=character()))
+    list(genotype=new("SnpMatrix"), 
+         map=DataFrame(snp.names=character(), 
+                       allele.1=DNAStringSet(), 
+                       allele.2=DNAStringSetList(), 
+                       ignore=character()))
 }
 
 setMethod("genotypeToSnpMatrix", "CollapsedVCF",

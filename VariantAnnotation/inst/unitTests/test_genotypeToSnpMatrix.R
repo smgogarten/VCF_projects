@@ -154,7 +154,7 @@ test_matrixToArray <- function() {
                     list(c(13,14)),
                     list(c(15))),
                   ncol=2)
-    arr <- .matrixOfListsToArray(mat)
+    arr <- VariantAnnotation:::.matrixOfListsToArray(mat)
     for (i in 1:nrow(mat)) {
         for (j in 1:ncol(mat)) {
             n <- elementLengths(mat[i,j])
