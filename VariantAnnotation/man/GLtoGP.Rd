@@ -20,7 +20,15 @@ GLtoGP(gl)
 }
 
 \details{
+  % define GL from 1000 genomes
+  % look up explanations on wiki
   Computes the probability of each genotype as \code{10^x / sum(10^x)}.
+  For example, for a set of log-10 likelihoods \code{(aa, ab, bb)}
+  corresponding to the genotypes "A/A",
+  "A/B", "B/B", the probability of the "A/A" genotype is computed as
+  \code{P("A/A") = 10^(aa) / (10^aa + 10^ab + 10^bb)}, where the sum in
+  the denominator ensures that probabilities of the three possible
+  genotypes sum to 1.
 }
 
 \value{

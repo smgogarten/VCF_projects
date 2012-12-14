@@ -49,6 +49,8 @@
     \item{only diploid calls are included; others are set to NA}
   }
 
+  %Descriptions of GT, GL, and GP from 1000 genomes go here
+
   In VCF files, 0 represents the reference allele and integers greater than 0
   represent the alternate alleles (i.e., 2, 3, 4 would indicate the 2nd, 3rd
   or 4th allele in the ALT field for a particular variant). This function only 
@@ -62,8 +64,12 @@
 
   If \code{uncertain=TRUE}, the posterior probabilities of the three
   genotypes ("A/A", "A/B", "B/B") are encoded (approximately) as byte
-  values.  See the \link[snpStats]{snpStats} documentation for more
-  details.
+  values.  This encoding allows uncertain genotypes to be used in
+  \link[snpStats]{snpStats} functions, which in some cases may be more
+  appropriate than using only the called genotypes.  The byte encoding
+  conserves memory by allowing the uncertain genotypes to be stored in a
+  two-dimensional raw matrix.
+  See the \link[snpStats]{snpStats} documentation for more details.
 }
 
 \value{
@@ -78,6 +84,10 @@
     The \code{ignore} column indicates which variants were set to \code{NA}
     (see \code{NA} criteria in 'details' section).
   } 
+}
+
+\references{
+  \url{http://www.1000genomes.org/wiki/Analysis/Variant\%20Call\%20Format/vcf-variant-call-format-version-41} 
 }
 
 \author{
