@@ -1,11 +1,14 @@
 \name{MatrixToSnpMatrix}
 \alias{MatrixToSnpMatrix}
+\alias{MatrixToSnpMatrix-deprecated}
 \alias{MatrixToSnpMatrix,matrix,DNAStringSet,DNAStringSetList-method}
 
 
 \title{Convert genotype calls from a VCF file to a SnpMatrix object}
 
 \description{
+  This method is deprecated.  Use \link{genotypeToSnpMatrix} instead.
+  
   Convert a matrix of genotype calls from the "GT" FORMAT field of a VCF
   file to a \link[snpStats:SnpMatrix-class]{SnpMatrix}.
 }
