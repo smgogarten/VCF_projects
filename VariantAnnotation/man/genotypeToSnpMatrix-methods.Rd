@@ -19,7 +19,7 @@
 \arguments{
   \item{x}{
     A \code{CollapsedVCF} object or a \code{array} of genotype data 
-    from the "GT" FORMAT field of a VCF file.  This \code{array} is created 
+    from the "GT", "GP", or "GL" FORMAT field of a VCF file.  This \code{array} is created 
     with a call to \code{readVcf} and can be accessed with \code{geno(<VCF>)}.
   }
   \item{uncertain}{
@@ -49,7 +49,18 @@
     \item{only diploid calls are included; others are set to NA}
   }
 
-  %Descriptions of GT, GL, and GP from 1000 genomes go here
+  \itemize{
+    \item{GT : genotype, encoded as allele values separated by either of
+      ”/” or “|”. The allele values are 0 for the reference allele (what is
+      in the REF field), 1 for the first allele listed in ALT, 2 for the
+      second allele list in ALT and so on.}
+    \item{GL : genotype likelihoods comprised of comma separated
+      floating point log10-scaled likelihoods for all possible genotypes
+      given the set of alleles defined in the REF and ALT fields.}
+    \item{GP : the phred-scaled genotype posterior probabilities for all
+      possible genotypes; intended to store
+      imputed genotype probabilities.}
+  }
 
   In VCF files, 0 represents the reference allele and integers greater than 0
   represent the alternate alleles (i.e., 2, 3, 4 would indicate the 2nd, 3rd
