@@ -49,19 +49,6 @@
     \item{only diploid calls are included; others are set to NA}
   }
 
-  \itemize{
-    \item{GT : genotype, encoded as allele values separated by either of
-      ”/” or “|”. The allele values are 0 for the reference allele (what is
-      in the REF field), 1 for the first allele listed in ALT, 2 for the
-      second allele list in ALT and so on.}
-    \item{GL : genotype likelihoods comprised of comma separated
-      floating point log10-scaled likelihoods for all possible genotypes
-      given the set of alleles defined in the REF and ALT fields.}
-    \item{GP : the phred-scaled genotype posterior probabilities for all
-      possible genotypes; intended to store
-      imputed genotype probabilities.}
-  }
-
   In VCF files, 0 represents the reference allele and integers greater than 0
   represent the alternate alleles (i.e., 2, 3, 4 would indicate the 2nd, 3rd
   or 4th allele in the ALT field for a particular variant). This function only 
@@ -72,6 +59,21 @@
   and "B" is the risk allele. Equivalent statements to those made with 0 and 1 
   allele values would be 0 = missing, 1 = "A/A", 2 = "A/B" or "B/A" and
   3 = "B/B".
+  
+  The three genotype fields are defined as follows:
+  \itemize{
+    \item{GT : genotype, encoded as allele values separated by either of
+      "/" or "|". The allele values are 0 for the reference allele and 1
+      for the alternate allele.}
+    \item{GL : genotype likelihoods comprised of comma separated
+      floating point log10-scaled likelihoods for all possible
+      genotypes.  In the case of a reference allele A and a single
+      alternate allele B, the likelihoods will be ordered "A/A", "A/B", "B/B".}
+    \item{GP : the phred-scaled genotype posterior probabilities for all
+      possible genotypes; intended to store
+      imputed genotype probabilities.  The ordering of values is the
+      same as for the GL field.}
+  }
 
   If \code{uncertain=TRUE}, the posterior probabilities of the three
   genotypes ("A/A", "A/B", "B/B") are encoded (approximately) as byte
@@ -148,13 +150,31 @@
   ## Convert the "GL" FORMAT field to a SnpMatrix
   mat <- genotypeToSnpMatrix(vcf, uncertain=TRUE)
 
-  ## Only 3 of the 9 variants passed the filters.
+  ## Only 3 of the 9 variants passed the filters.  The
+  ## other 6 variants had no alternate alleles.
   mat$map
 
-  ## Compare original vs SnpMatrix coding for a subset of
-  ## samples in variant rs180734498. 
+  ## Compare genotype representations for a subset of
+  ## samples in variant rs180734498.
+  ## Original called genotype
+  geno(vcf)$GT["rs180734498", 14:16]
+
+  ## Original genotype likelihoods
   geno(vcf)$GL["rs180734498", 14:16]
+
+  ## Posterior probability (computed inside genotypeToSnpMatrix)
+  GLtoGP(geno(vcf)$GL["rs180734498", 14:16, drop=FALSE])[1,]
+
+  ## SnpMatrix coding.
   t(as(mat$genotype, "character"))["rs180734498", 14:16]
+  t(as(mat$genotype, "numeric"))["rs180734498", 14:16]
+
+  ## For samples NA11829 and NA11830, one probability is significantly
+  ## higher than the others, so SnpMatrix calls the genotype.  These
+  ## calls match the original coding: "0|1" -> "A/B", "0|0" -> "A/A".
+  ## Sample NA11831 was originally called as "0|1" but the probability
+  ## of "0|0" is only a factor of 3 lower, so SnpMatrix calls it as
+  ## "Uncertain" with an appropriate byte-level encoding.
 }
 
 \keyword{manip}
