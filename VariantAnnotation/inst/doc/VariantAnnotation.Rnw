@@ -472,7 +472,19 @@ geno(vcf.gl)
 ## Convert the "GL" FORMAT field to a SnpMatrix
 res <- genotypeToSnpMatrix(vcf.gl, uncertain=TRUE)
 res
+t(as(res$genotype, "character"))[c(1,3,7), 1:5]
+
+## Compare to a SnpMatrix created from the "GT" field
+res.gt <- genotypeToSnpMatrix(vcf.gl, uncertain=FALSE)
+t(as(res.gt$genotype, "character"))[c(1,3,7), 1:5]
+
+## What are the original likelihoods for rs58108140?
+geno(vcf.gl)$GL["rs58108140", 1:5]
 @ 
+
+For variant rs58108140 in sample NA06989, the "A/B" genotype is much
+more likely than the others, so the \Rcode{SnpMatrix} object displays
+the called genotype.
 
 \subsection{Expand a VCF}
 
