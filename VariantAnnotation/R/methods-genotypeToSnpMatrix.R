@@ -26,8 +26,7 @@ setMethod("genotypeToSnpMatrix", "CollapsedVCF",
 
     alt <- alt(x)
     if (is(alt, "CompressedCharacterList")) {
-        warning(paste0("structural variants detected and not supported ",
-                "by SnpMatrix; returning NULL"))
+        warning("ALT must be DNAStringSetList")
         return(.emptySnpMatrix())
     }
     ref <- ref(x)
@@ -35,7 +34,7 @@ setMethod("genotypeToSnpMatrix", "CollapsedVCF",
     if (ncol(x) == 0) {
         warning("no samples in VCF")
     }
-    
+
     if (!uncertain) {
         gt <- geno(x)$GT
     } else {
@@ -69,11 +68,12 @@ setMethod("genotypeToSnpMatrix", "array",
         stop("'alt' must be a DNAStringSetList")
     # query ref and alt alleles for valid SNPs
     altelt <- elementLengths(alt) == 1L 
-    altseq <- logical(length(alt))
-    idx <- rep(altelt, elementLengths(alt))
-    altseq[altelt] = width(unlist(alt))[idx] == 1L
-    snv <- altseq & (width(ref) == 1L)
-    
+    #altseq <- logical(length(alt))
+    #idx <- rep(altelt, elementLengths(alt))
+    #altseq[altelt] = width(unlist(alt))[idx] == 1L
+    #snv <- altseq & (width(ref) == 1L)
+    snv <- .isSNV(ref, alt) 
+ 
     # if x is a matrix, we have GT with a single value for each snp
     if (is.matrix(x)) {
         if (!all(altelt)) {
@@ -85,10 +85,10 @@ setMethod("genotypeToSnpMatrix", "array",
             warning("non-single nucleotide variations are set to NA")
             x[!snv,] <- ".|."
         }
-        
-        map <- setNames(sapply(rep(c(0, 1, 2, 2, 3), 2), as.raw),
-                        c(".|.", "0|0", "0|1", "1|0", "1|1",
-                          "./.", "0/0", "0/1", "1/0", "1/1"))
+        map <- .genotypeToIntegerSNV(TRUE)
+        #map <- setNames(sapply(rep(c(0, 1, 2, 2, 3), 2), as.raw),
+        #                c(".|.", "0|0", "0|1", "1|0", "1|1",
+        #                  "./.", "0/0", "0/1", "1/0", "1/1"))
         diploid <- x %in% names(map)
         if (!all(diploid)) {
             warning("non-diploid variants are set to NA")
